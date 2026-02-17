@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../nucleo/constantes/constantes_cores.dart';
 import '../../nucleo/componentes/barra_superior.dart';
 import '../../nucleo/componentes/botao_padrao.dart';
@@ -9,17 +10,23 @@ class TelaVisualizarPdf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // CAPTURA OS DADOS ENVIADOS PELA TELA DE HISTÓRICO
+    final Map<String, dynamic> mov = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
+    bool isEntrada = mov['tipo'] == 'ENTRADA';
+    DateTime data = DateTime.parse(mov['data_movimento']);
+
     return Scaffold(
-      appBar: const BarraSuperior(titulo: "Detalhes do Movimento"),
+      appBar: BarraSuperior(titulo: "Detalhes: ${mov['codigo_guia']}"),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "SAÍDA DE INVENTÁRIO",
+            Text(
+              isEntrada ? "NOTA DE ENTRADA" : "GUIA DE SAÍDA",
               style: TextStyle(
-                color: CoresApp.primaria,
+                color: isEntrada ? Colors.green : CoresApp.erro,
                 fontWeight: FontWeight.bold,
                 fontSize: 10,
                 letterSpacing: 1.2,
@@ -29,60 +36,52 @@ class TelaVisualizarPdf extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  "#MV-88291",
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900),
+                Expanded(
+                  child: Text(
+                    mov['codigo_guia'],
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                  ),
                 ),
                 Icon(
-                  Icons.inventory_2_rounded,
+                  isEntrada ? Icons.login_rounded : Icons.logout_rounded,
                   size: 40,
-                  color: CoresApp.primaria.withOpacity(0.2),
+                  color: (isEntrada ? Colors.green : CoresApp.erro).withOpacity(0.2),
                 ),
               ],
             ),
             const Text(
-              "Processado via Hub Logístico v4.2",
+              "Registro auditado via Sistema Industrial v1.0",
               style: TextStyle(color: CoresApp.textoSecundario, fontSize: 12),
             ),
             const SizedBox(height: 32),
 
-            _buildSecaoInfo("INFORMAÇÃO DA TRANSACÇÃO", [
-              _itemInfo(Icons.logout, "Tipo", "Saída", CoresApp.erro),
-              _itemInfo(
-                Icons.architecture,
-                "Material",
-                "Varão de Aço 12mm",
-                null,
-              ),
-              _itemInfo(
-                Icons.layers,
-                "Quantidade",
-                "1.250 Unidades",
-                CoresApp.primaria,
-              ),
-              _itemInfo(Icons.map, "Província", "Gaza", null),
-              _itemInfo(Icons.location_on, "Obra", "Ponte Limpopo B", null),
-              _itemInfo(Icons.person, "Responsável", "Alex Johnson", null),
-              _itemInfo(
-                Icons.schedule,
-                "Data/Hora",
-                "24 Out, 2023 14:30",
-                null,
-              ),
+            _buildSecaoInfo("RESUMO DO MOVIMENTO", [
+              _itemInfo(Icons.category, "Material", mov['material_nome'], null),
+              _itemInfo(Icons.layers, "Quantidade", "${mov['quantidade']} ${mov['unidade_medida'] ?? 'Un'}", CoresApp.primaria),
+              _itemInfo(Icons.map, "Província", mov['provincia_nome'], null),
+              if (mov['projeto_nome'] != null)
+                _itemInfo(Icons.location_on, "Projeto/Obra", mov['projeto_nome'], null),
+              _itemInfo(Icons.person, "Responsável", mov['funcionario_nome'], null),
+              _itemInfo(Icons.schedule, "Data e Hora", DateFormat('dd MMM, yyyy HH:mm').format(data), null),
             ]),
 
             const SizedBox(height: 40),
+            // OBS: Futuramente você pode gerar um PDF real aqui
             BotaoPadrao(
-              texto: "Abrir Documento PDF",
+              texto: "Imprimir Guia (PDF)",
               icone: Icons.picture_as_pdf,
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gerando PDF...")));
+              },
             ),
             const SizedBox(height: 12),
             BotaoPadrao(
-              texto: "Partilhar PDF",
+              texto: "Partilhar Detalhes",
               icone: Icons.share,
               outlined: true,
-              onPressed: () {},
+              onPressed: () {
+                // Lógica de partilha de texto
+              },
             ),
           ],
         ),
@@ -90,6 +89,8 @@ class TelaVisualizarPdf extends StatelessWidget {
     );
   }
 
+  // ... (Mantenha os métodos _buildSecaoInfo e _itemInfo que você já tem)
+}
   Widget _buildSecaoInfo(String titulo, List<Widget> itens) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,4 +140,4 @@ class TelaVisualizarPdf extends StatelessWidget {
       ),
     );
   }
-}
+

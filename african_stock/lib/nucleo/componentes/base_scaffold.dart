@@ -26,7 +26,6 @@ class BaseScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      // 1. CABEÇALHO PADRÃO (Avatar Esq. | Logo Centro | Notificações Dir.)
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -6,6 +6,9 @@ class MaterialModel {
   final double quantidade;
   final double quantidadeMinima;
   final String unidadeMedida;
+  final String? marca;
+  final String? tamanho;
+  final double precoCompra;
 
   MaterialModel({
     required this.id,
@@ -15,7 +18,10 @@ class MaterialModel {
     required this.quantidade,
     required this.quantidadeMinima,
     required this.unidadeMedida,
+    this.marca,
+    this.tamanho,
+    this.precoCompra = 0.0, 
   });
-
+  // Verificação se o stock está baixo
   bool get estaBaixo => quantidade <= quantidadeMinima;
 }

@@ -3,7 +3,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import '../../nucleo/constantes/constantes_cores.dart';
 import '../../nucleo/componentes/botao_padrao.dart';
 import '../modelos/material.dart';
 

@@ -3,7 +3,9 @@ import 'package:african_stock/autenticacao/Controllers/controlador_autenticacao.
 import 'package:african_stock/nucleo/componentes/base_scaffold.dart';
 import 'package:african_stock/nucleo/constantes/constantes_rotas.dart';
 import 'package:african_stock/nucleo/controladores/controlador_utilizador.dart';
+import 'package:african_stock/nucleo/servicos/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../nucleo/constantes/constantes_cores.dart';
 import '../../nucleo/componentes/card_padrao.dart';
 import '../controladores/controlador_painel.dart';
@@ -18,6 +20,7 @@ class TelaPainelPrincipal extends StatefulWidget {
 class _TelaPainelPrincipalState extends State<TelaPainelPrincipal> {
   final _controlador = ControladorPainel();
   
+  
   // Lógica de Visibilidade e Admin
   bool _mostrarValor = false; // Valor inicial oculto por segurança
 
@@ -29,9 +32,21 @@ class _TelaPainelPrincipalState extends State<TelaPainelPrincipal> {
   int _paginaAtual = 0;
   late Timer _timer;
 
+  double _valorTotalReal = 0.0;
+  List<dynamic> _movimentosReais = [];
+  bool _carregandoPainel = true;
+  int _notificacoesCount = 0;
+
+  
+ 
+
+ 
+
+
   @override
   void initState() {
     super.initState();
+      _inicializarPainel();
     // Inicia a rotação automática do carrossel de anúncios
     _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
       if (_paginaAtual < 2) {
@@ -56,6 +71,18 @@ class _TelaPainelPrincipalState extends State<TelaPainelPrincipal> {
     super.dispose();
   }
 
+Future<void> _inicializarPainel() async {
+    setState(() => _carregandoPainel = true);
+    final dados = await ApiService().obterDadosDashboard();
+    
+    if (dados['sucesso'] == true) {
+      setState(() {
+        _valorTotalReal = double.tryParse(dados['valor_total'].toString()) ?? 0.0;
+        _movimentosReais = dados['movimentos'] ?? [];
+        _carregandoPainel = false;
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
@@ -217,6 +244,7 @@ PreferredSizeWidget _buildAppBar() {
   }
 
 Widget _buildCardValorTotal() {
+  final formatar = NumberFormat.currency(symbol: "MT ", decimalDigits: 2);
   return Container(
     margin: const EdgeInsets.symmetric(horizontal: 20),
     padding: const EdgeInsets.all(24),
@@ -248,7 +276,7 @@ Widget _buildCardValorTotal() {
           children: [
             Text(
               _souAdmin 
-                ? (_mostrarValor ? "MT 2,450,000" : "MT ••••••••")
+                ? (_mostrarValor ? formatar.format(_valorTotalReal) : "MT ••••••••")
                 : "ACESSO RESTRITO", 
               style: TextStyle(
                 color: Colors.white, 
@@ -319,6 +347,12 @@ Widget _buildMiniInfo(IconData icon, String label, String value) {
           _buildBotoesQuadrados("Gestão de Trabalhos", Icons.work, RotasApp.projetos),
            
           _buildBotoesQuadrados("Agenda", Icons.calendar_today_rounded, RotasApp.agenda),
+          if (_souAdmin) // <--- Regra de segurança: só o Admin vê isto
+  _buildBotoesQuadrados(
+    "Relatórios", 
+    Icons.analytics_rounded, 
+    RotasApp.relatoriosAdmin
+  ),
            ],
       ),
 
@@ -347,31 +381,35 @@ Widget _buildMiniInfo(IconData icon, String label, String value) {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("ACTIVIDADE RECENTE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
-              TextButton(onPressed: () => Navigator.pushNamed(context, RotasApp.historicoGeral), child: const Text("Ver Tudo", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: CoresApp.primaria))),
-            ],
-          ),
+          _buildSecaoTitulo("ACTIVIDADE RECENTE"),
           CardPadrao(
             padding: EdgeInsets.zero,
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _controlador.movimentosRecentes.take(3).length,
-              separatorBuilder: (c, i) => Divider(height: 1, color: CoresApp.bordaClaro.withOpacity(0.5)),
-              itemBuilder: (context, index) {
-                final mov = _controlador.movimentosRecentes[index];
-                return ListTile(
-                  onTap: () => Navigator.pushNamed(context, RotasApp.visualizarPdf),
-                  leading: CircleAvatar(backgroundColor: CoresApp.fundoClaro, child: Icon(index % 2 == 0 ? Icons.login : Icons.logout, size: 18, color: CoresApp.primaria)),
-                  title: Text(mov['item'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  subtitle: Text("Guia: #MV-2024-${index + 100}", style: const TextStyle(fontSize: 11)),
-                  trailing: Text(mov['quantidade'], style: TextStyle(fontWeight: FontWeight.bold, color: mov['cor'] == 'sucesso' ? const Color(0xFF10B981) : const Color(0xFFEF4444))),
-                );
-              },
-            ),
+            child: _carregandoPainel 
+              ? const Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator())
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _movimentosReais.length,
+                  separatorBuilder: (c, i) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final mov = _movimentosReais[index];
+                    bool isEntrada = mov['tipo'] == 'ENTRADA';
+                    
+                    return ListTile(
+                      onTap: () => Navigator.pushNamed(context, RotasApp.visualizarPdf, arguments: mov),
+                      leading: CircleAvatar(
+                        backgroundColor: isEntrada ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                        child: Icon(isEntrada ? Icons.add : Icons.remove, size: 18, color: isEntrada ? Colors.green : Colors.red),
+                      ),
+                      title: Text(mov['item'] ?? "Material", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      subtitle: Text("Guia: ${mov['codigo_guia']}", style: const TextStyle(fontSize: 11)),
+                      trailing: Text(
+                        "${mov['quantidade']}", 
+                        style: TextStyle(fontWeight: FontWeight.bold, color: isEntrada ? Colors.green : Colors.red)
+                      ),
+                    );
+                  },
+                ),
           ),
         ],
       ),

@@ -47,7 +47,6 @@ class _TelaListaProvinciasState extends State<TelaListaProvincias> {
   }
 
   Widget _buildCardProvincia(ProvinciaModel provincia) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),

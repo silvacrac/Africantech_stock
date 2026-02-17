@@ -18,6 +18,8 @@ class RotasApp {
   static const String equipas = '/equipas';
   static const String agenda = '/agenda';
   static const String provincias = '/provincias';
+  static const String recuperarSenha = '/recuperar-senha';
+  static const String relatoriosAdmin = '/admin/relatorios';
 
   
 }

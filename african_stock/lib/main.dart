@@ -1,12 +1,17 @@
-import 'package:african_stock/obras/telas/tela_agenda_global.dart';
-import 'package:african_stock/obras/telas/tela_lista_funcionarios.dart';
-import 'package:african_stock/obras/telas/tela_lista_projetos.dart';
-import 'package:african_stock/provincias/telas/tela_lista_provincias.dart';
+import 'package:african_stock/painel_principal/telas/tela_relatorios_admin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
-// Importações das tuas telas (mantém as que já tens)
+
+// --- NÚCLEO E CONSTANTES ---
+import 'nucleo/constantes/constantes_cores.dart';
+import 'nucleo/constantes/constantes_rotas.dart';
+import 'nucleo/constantes/constantes_textos.dart';
+
+// --- TELAS ---
 import 'autenticacao/telas/tela_login.dart';
+import 'autenticacao/telas/tela_splash.dart';
+import 'autenticacao/telas/tela_recuperar_senha.dart';
 import 'painel_principal/telas/tela_painel_principal.dart';
 import 'materiais/telas/tela_lista_materiais.dart';
 import 'movimentos_stock/telas/tela_registar_saida.dart';
@@ -15,17 +20,23 @@ import 'historico/telas/tela_historico_geral.dart';
 import 'notificacoes/telas/tela_notificacoes.dart';
 import 'perfil/telas/tela_perfil.dart';
 import 'documentos/telas/tela_visualizar_pdf.dart';
-import 'nucleo/constantes/constantes_cores.dart';
-import 'nucleo/constantes/constantes_rotas.dart';
-import 'nucleo/constantes/constantes_textos.dart';
+import 'obras/telas/tela_lista_projetos.dart';
+import 'obras/telas/tela_lista_funcionarios.dart';
+import 'obras/telas/tela_agenda_global.dart';
+import 'provincias/telas/tela_lista_provincias.dart';
 
 // 1. CONTROLADOR DE TEMA GLOBAL
 final ValueNotifier<ThemeMode> temaAtual = ValueNotifier(ThemeMode.light);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inicialização de Idioma (Português) para datas
   await initializeDateFormatting('pt_BR', null); 
+
+  // Trava orientação do ecrã em modo vertical
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
   runApp(const SistemaGestaoStock());
 }
 
@@ -34,15 +45,15 @@ class SistemaGestaoStock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 2. O ValueListenableBuilder reconstrói o app quando o tema muda
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: temaAtual,
       builder: (_, mode, __) {
         return MaterialApp(
           title: TextosApp.nomeApp,
           debugShowCheckedModeBanner: false,
-          themeMode: mode, // Usa o modo selecionado pelo utilizador
+          themeMode: mode, 
 
+          // --- TEMA CLARO (LIGHT) ---
           theme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.light,
@@ -50,22 +61,42 @@ class SistemaGestaoStock extends StatelessWidget {
             scaffoldBackgroundColor: CoresApp.fundoClaro,
             cardColor: CoresApp.cardClaro,
             fontFamily: 'Inter',
-            colorScheme: const ColorScheme.light(primary: CoresApp.primaria),
+            appBarTheme: const AppBarTheme(
+              surfaceTintColor: Colors.transparent,
+              backgroundColor: Colors.transparent,
+            ),
+            colorScheme: const ColorScheme.light(
+              primary: CoresApp.primaria,
+              secondary: CoresApp.acento,
+            ),
           ),
 
+          // --- TEMA ESCURO (DARK) ---
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
             primaryColor: CoresApp.primaria,
-            scaffoldBackgroundColor: CoresApp.fundoEscuro,
-            cardColor: CoresApp.cardEscuro,
+            scaffoldBackgroundColor: const Color(0xFF001122), // Fundo Noturno que combina com o Radar
+            cardColor: const Color(0xFF1E293B),
             fontFamily: 'Inter',
-            colorScheme: const ColorScheme.dark(primary: CoresApp.primaria),
+            appBarTheme: const AppBarTheme(
+              surfaceTintColor: Colors.transparent,
+              backgroundColor: Colors.transparent,
+            ),
+            colorScheme: const ColorScheme.dark(
+              primary: CoresApp.primaria,
+              secondary: CoresApp.acento,
+              background: Color(0xFF001122),
+            ),
           ),
 
-          initialRoute: RotasApp.login,
+          // 2. ROTA INICIAL ALTERADA PARA SPLASH (Para carregar a animação primeiro)
+          initialRoute: RotasApp.splash, 
+
           routes: {
+            RotasApp.splash: (context) => const TelaSplash(),
             RotasApp.login: (context) => const TelaLogin(),
+            RotasApp.recuperarSenha: (context) => const TelaRecuperarSenha(),
             RotasApp.dashboard: (context) => const TelaPainelPrincipal(),
             RotasApp.listaMateriais: (context) => const TelaListaMateriais(),
             RotasApp.registarSaida: (context) => const TelaRegistarSaida(),
@@ -78,6 +109,7 @@ class SistemaGestaoStock extends StatelessWidget {
             RotasApp.equipas: (context) => const TelaListaFuncionarios(),
             RotasApp.agenda : (context) => const TelaAgendaGlobal(),
             RotasApp.provincias: (context) => const TelaListaProvincias(),
+            RotasApp.relatoriosAdmin: (context) => const TelaRelatoriosAdmin(),
           },
         );
       },

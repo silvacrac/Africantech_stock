@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:african_stock/nucleo/controladores/controlador_utilizador.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../main.dart'; // Importante para aceder ao temaAtual e fotoPerfilGlobal
+import '../../main.dart'; 
 import '../../nucleo/constantes/constantes_cores.dart';
 import '../../nucleo/constantes/constantes_rotas.dart';
 import '../../nucleo/componentes/card_padrao.dart';
@@ -103,7 +103,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
             const SizedBox(height: 20),
             const Text(
-              "African Stock Enterprise v2.4.0",
+              "Africantech Stock",
               style: TextStyle(
                 fontSize: 10,
                 color: Color(0xFF94A3B8),
